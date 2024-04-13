@@ -319,7 +319,7 @@ const mutations = {
   ...POST,
   ...PUT,
   ...DELETE,
-}
+};
 
 const RootQuery = new GraphQLObjectType({
   name: "RootQuery",
