@@ -22,12 +22,7 @@ const uuid = new GraphQLObjectType({
   }),
 });
 
-
-const CompanyFields = [
-  "id",
-  "name",
-  "geo",
-];
+const CompanyFields = ["id", "name", "geo"];
 
 const CompanyType = new GraphQLObjectType({
   name: "Company",
@@ -45,18 +40,18 @@ const CompanyType = new GraphQLObjectType({
   }),
 });
 
-const GenderEnum = {
-  type: new GraphQLNonNull(
-    new GraphQLEnumType({
-      name: "Gender",
-      values: {
-        Male: { value: "Male" },
-        Female: { value: "Female" },
-        Other: { value: "Other" },
-      },
-    })
-  ),
+const genderEnum = {
+  name: "Gender",
+  values: {
+    Male: { value: "Male" },
+    Female: { value: "Female" },
+    Other: { value: "Other" },
+  },
 };
+
+const NullableGenderEnum = new GraphQLEnumType({ ...genderEnum });
+
+const GenderEnum = new GraphQLNonNull(NullableGenderEnum);
 
 const EmployeeFields = [
   "id",
@@ -74,7 +69,7 @@ const EmployeeType = new GraphQLObjectType({
     id: { type: new GraphQLNonNull(GraphQLString) },
     name: { type: new GraphQLNonNull(GraphQLString) },
     position: { type: new GraphQLNonNull(GraphQLString) },
-    gender: { ...GenderEnum },
+    gender: { type: GenderEnum },
     age: { type: new GraphQLNonNull(GraphQLInt) },
     active: { type: new GraphQLNonNull(GraphQLBoolean) },
     companyId: { type: new GraphQLNonNull(GraphQLString) },
@@ -132,7 +127,7 @@ const POST = {
       id: { type: new GraphQLNonNull(GraphQLString) },
       name: { type: new GraphQLNonNull(GraphQLString) },
       position: { type: new GraphQLNonNull(GraphQLString) },
-      gender: { ...GenderEnum },
+      gender: { type: GenderEnum },
       age: { type: new GraphQLNonNull(GraphQLInt) },
       active: { type: new GraphQLNonNull(GraphQLBoolean) },
       companyId: { type: new GraphQLNonNull(GraphQLString) },
@@ -148,14 +143,11 @@ const POST = {
           const { companyId } = args;
 
           // Check if companyId exists in the list of companies
-          const companies = await axios
-            .get("http://localhost:3000/companies")
+          const company = await axios
+            .get(`http://localhost:3000/companies/${companyId}`)
             .then((res) => res.data);
-          const companyExists = companies.some(
-            (company) => company.id === companyId
-          );
 
-          if (companyExists) {
+          if (company) {
             // Create employee
             return await axios
               .post("http://localhost:3000/employees", { ...args })
@@ -198,6 +190,137 @@ const POST = {
   },
 };
 
+const PUT = {
+  updateEmployee: {
+    type: EmployeeType,
+    args: {
+      id: { type: new GraphQLNonNull(GraphQLString) },
+      name: { type: GraphQLString },
+      position: { type: GraphQLString },
+      gender: { type: NullableGenderEnum },
+      age: { type: GraphQLInt },
+      active: { type: GraphQLBoolean },
+      companyId: { type: GraphQLString },
+    },
+    resolve: async (root, args) => {
+      try {
+        // Check if arguments are not undefined
+        const argsAreNotUndefined = Object.keys(args).every(
+          (field) => args[field]
+        );
+
+        if (argsAreNotUndefined) {
+          const { id } = args;
+
+          // Check if companyId argument exists
+          if (args.companyId) {
+            // Check if companyId exists in the list of companies
+            const { companyId } = args;
+            const company = await axios
+              .get(`http://localhost:3000/companies/${companyId}`)
+              .then((res) => res.data);
+
+            if (company) {
+              // Update employee
+              return await axios
+                .put(`http://localhost:3000/employees/${id}`, { ...args })
+                .then((res) => res.data);
+            } else {
+              throw new Error(`Company with id ${companyId} not found.`);
+            }
+          } else {
+            // Update employee
+            return await axios
+              .put(`http://localhost:3000/employees/${id}`, { ...args })
+              .then((res) => res.data);
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
+  updateCompany: {
+    type: CompanyType,
+    args: {
+      id: { type: new GraphQLNonNull(GraphQLString) },
+      name: { type: GraphQLString },
+      geo: { type: GraphQLString },
+    },
+    resolve: async (root, args) => {
+      try {
+        // Check if all values are not undefined or null
+        const argsAreNotNull = CompanyFields.every(
+          (field) => args.hasOwnProperty(field) && args[field]
+        );
+
+        if (argsAreNotNull) {
+          const { id } = args;
+          return await axios
+            .put(`http://localhost:3000/companies/${id}`, { ...args })
+            .then((res) => res.data);
+        } else {
+          throw new Error(`An error occured. Please try again later.`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
+};
+
+const DELETE = {
+  deleteEmployee: {
+    type: EmployeeType,
+    args: {
+      id: { type: new GraphQLNonNull(GraphQLString) },
+    },
+    resolve: async (root, { id }) => {
+      try {
+        return await axios
+          .delete(`http://localhost:3000/employees/${id}`)
+          .then((res) => res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
+  deleteCompany: {
+    type: CompanyType,
+    args: {
+      id: { type: new GraphQLNonNull(GraphQLString) },
+    },
+    resolve: async (root, { id }) => {
+      try {
+        const employees = await axios
+          .get(`http://localhost:3000/employees?companyId=${id}`)
+          .then((res) => res.data);
+
+        if (employees) {
+          for(const employee of employees) {
+            await axios
+              .delete(`http://localhost:3000/employees/${employee.id}`)
+              .then((res) => res.data);
+          }
+        }
+
+        return await axios
+          .delete(`http://localhost:3000/companies/${id}`)
+          .then((res) => res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
+};
+
+const mutations = {
+  ...GET,
+  ...POST,
+  ...PUT,
+  ...DELETE,
+}
+
 const RootQuery = new GraphQLObjectType({
   name: "RootQuery",
   fields: {
@@ -205,8 +328,7 @@ const RootQuery = new GraphQLObjectType({
       type: uuid,
       resolve: () => ({}),
     },
-    ...GET,
-    ...POST,
+    ...mutations
   },
 });
 
@@ -215,23 +337,3 @@ const schema = new GraphQLSchema({
 });
 
 module.exports = { schema };
-
-// {
-//   createEmployee(
-//     id: "2df17134-7810-4a2a-a470-19d6056193ca",
-//     name: "Therese Celestine",
-//     position: "Senior Manager",
-//     gender: Female,
-//     age: 27,
-//     active: true,
-//     companyId: "21ecaa16-2905-4762-aacb-17e17c8e0e10"
-//   ) {
-//     id,
-//     name,
-//     position,
-//     gender,
-//     age,
-//     active,
-//     companyId
-//   }
-// } 006b1086-8e12-4675-873c-48b72e602500
