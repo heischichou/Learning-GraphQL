@@ -2,6 +2,8 @@ const graphql = require("graphql");
 const {
   GraphQLObjectType,
   GraphQLString,
+  GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLInt,
   GraphQLSchema,
   GraphQLList,
@@ -14,9 +16,7 @@ const uuid = new GraphQLObjectType({
   fields: () => ({
     v4: {
       type: new GraphQLNonNull(GraphQLString),
-      resolve() {
-        return v4();
-      },
+      resolve: () => v4(),
     },
   }),
 });
@@ -26,9 +26,7 @@ const RootQuery = new GraphQLObjectType({
   fields: {
     uuid: {
       type: uuid,
-      resolve() {
-        return {};
-      },
+      resolve: () => ({}),
     },
   },
 });
