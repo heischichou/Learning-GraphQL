@@ -1,0 +1,33 @@
+{
+  "name": "learning-graphql",
+  "version": "1.0.0",
+  "description": "A simple project to learn GraphQL with.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "json-server --watch db.json",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heischichou/Learning-GraphQL.git"
+  },
+  "keywords": [
+    "graphql",
+    "json"
+  ],
+  "author": "Jan Michael Garot",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/heischichou/Learning-GraphQL/issues"
+  },
+  "homepage": "https://github.com/heischichou/Learning-GraphQL#readme",
+  "dependencies": {
+    "express": "^4.19.2",
+    "graphql": "^16.8.1",
+    "graphql-http": "^1.22.1",
+    "json-server": "^1.0.0-alpha.23",
+    "nodemon": "^3.1.0",
+    "ruru": "^2.0.0-beta.11"
+  }
+}
