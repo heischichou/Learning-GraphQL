@@ -7,25 +7,34 @@ const {
   GraphQLList,
   GraphQLNonNull,
 } = graphql;
+const { v4 } = require('uuid');
 
-/**
- * Construct a GraphQL schema and define the necessary resolvers.
- *
- * type Query {
- *   hello: String
- * }
- */
-const query = new GraphQLObjectType({
-  name: "Query",
+const uuid = new GraphQLObjectType({
+  name: "uuid",
+  fields: () => ({
+    v4: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve() {
+        return v4();
+      },
+    },
+  }),
+});
+
+const RootQuery = new GraphQLObjectType({
+  name: "RootQuery",
   fields: {
-    hello: {
-      type: GraphQLString,
+    uuid: {
+      type: uuid,
+      resolve() {
+        return {};
+      },
     },
   },
 });
 
 const schema = new GraphQLSchema({
-  query: query,
+  query: RootQuery,
 });
 
 module.exports = { schema };

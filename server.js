@@ -4,19 +4,13 @@ const { createHandler } = require("graphql-http/lib/use/express");
 const { ruruHTML } = require("ruru/server");
 const { schema } = require("./schema/schema")
 
-// The root provides a resolver function for each API endpoint
-const root = {
-  hello: () => "Hello world!",
-};
-
 // Create a express instance serving all methods on `/graphql`
 // where the GraphQL over HTTP express request handler is
 const app = express();
 
 graphql({
   schema: schema,
-  source: "{ hello }",
-  rootValue: root,
+  source: "{ uuid { v4 } }",
   graphiql: true,
 }).then(response => {
   console.log(response)
@@ -26,7 +20,6 @@ app.all(
   "/graphql",
   createHandler({
     schema: schema,
-    rootValue: root,
   })
 );
 
